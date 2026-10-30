@@ -1,23 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hello TV Test</title>
-<style>
-html,body{height:100%;margin:0;background:#14243e;color:white;font-family:Arial,sans-serif}
-main{padding:9% 7%;text-align:center}h1{font-size:64px;margin:0 0 25px}p{font-size:30px;line-height:1.5}
-button{margin:25px;padding:18px 45px;font-size:30px;background:#eaf4ff;color:#162b45;border:5px solid #ffe082;border-radius:12px}
-#status{color:#b4f1ce}
-</style>
-</head>
-<body><main><h1>Hello, Samsung TV!</h1><p>This test page is running inside TizenBrew.</p><button id="test" autofocus>Press OK / Enter</button><p id="status">Waiting for remote input.</p></main>
-<script>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mojangels AI TV</title><style>
+html,body{margin:0;min-height:100%;background:#101b31;color:#f5f8ff;font-family:Arial,sans-serif}
+main{padding:5% 6%}h1{font-size:54px;margin:0 0 12px;color:#a9d8ff}p{font-size:25px;line-height:1.4;color:#ccd9e9}
+header{margin-bottom:38px}.sub{color:#b8c9de;font-size:23px}.tiles{display:block;max-width:1300px}
+.tile{display:inline-block;vertical-align:top;box-sizing:border-box;width:44%;min-height:152px;margin:0 2% 25px 0;padding:25px;background:#243752;color:#fff;border:4px solid #3c587c;border-radius:15px;text-align:left;font:28px Arial,sans-serif}
+.tile:focus{outline:0;border-color:#ffdc78;background:#365474}.tile small{display:block;color:#b8d0e9;margin-top:14px;font-size:19px}
+#message{background:#1c2c45;max-width:1160px;min-height:64px;border-left:6px solid #8cbfff;padding:17px 23px;font-size:23px;color:#e4eefc}
+#footer{font-size:18px;color:#b8c9de;margin-top:25px}.back{margin:25px 0 0;padding:16px 30px;font-size:22px;border-radius:9px;border:3px solid #658bad;color:white;background:#344d6a}
+.back:focus{border-color:#ffdc78}#detail{display:none}.tag{color:#b5facf}
+</style></head><body><main>
+<header><h1>Mojangels AI TV</h1><div class="sub">Your custom dashboard, running directly on Samsung Tizen</div></header>
+<div id="home"><div class="tiles">
+<button class="tile" data-action="chat">ChatGPT Assistant<small>Planned — needs secure API connection</small></button>
+<button class="tile" data-action="remote">Remote Control Test<small>Working — test arrows and OK</small></button>
+<button class="tile" data-action="voice">Voice Assistant<small>Planned — microphone compatibility not verified</small></button>
+<button class="tile" data-action="tv">TV Controls<small>Planned — Samsung capabilities need testing</small></button>
+</div><div id="message">Use the arrow keys to select a tile, then press OK.</div></div>
+<section id="detail"><h2 id="heading" style="font-size:40px"></h2><p id="description"></p><p class="tag" id="feedback"></p><button id="back" class="back">Back to dashboard</button></section>
+<div id="footer">Mojangels AI TV v0.1 · Prototype only · No account or API key required</div>
+</main><script>
 (function(){
-var button=document.getElementById('test'),status=document.getElementById('status');
-button.onclick=function(){status.innerHTML='Success! Remote OK button works.';};
-document.addEventListener('keydown',function(e){if(e.keyCode===13){button.click();}});
-button.focus();
-}());
-</script>
-</body></html>
+var tiles=document.querySelectorAll('.tile'),home=document.getElementById('home'),detail=document.getElementById('detail'),heading=document.getElementById('heading'),description=document.getElementById('description'),feedback=document.getElementById('feedback'),back=document.getElementById('back'),active=0;
+var pages={
+chat:['ChatGPT Assistant','This is a placeholder, not a live ChatGPT session. A secure backend and an OpenAI API connection are required. Do not enter API keys on this TV.'],
+remote:['Remote Control Test','Press the directional arrows to navigate the dashboard. Press OK to open a tile; press Back to return.'],
+voice:['Voice Assistant','Not connected yet. We must test microphone access on this Tizen 3.0 TV before promising voice commands.'],
+tv:['TV Controls','Not connected yet. App launching, volume and inputs require separate Samsung API compatibility tests.']
+};
+function focusTile(i){active=(i+tiles.length)%tiles.length;tiles[active].focus();}
+function show(name){var p=pages[name];heading.textContent=p[0];description.textContent=p[1];feedback.textContent=name==='remote'?'Remote OK button works.':'This feature is not yet enabled.';home.style.display='none';detail.style.display='block';back.focus();}
+function goHome(){detail.style.display='none';home.style.display='block';focusTile(active);}
+for(var i=0;i<tiles.length;i++){(function(idx){tiles[idx].onclick=function(){active=idx;show(tiles[idx].getAttribute('data-action'));};tiles[idx].onfocus=function(){active=idx;};})(i);}
+back.onclick=goHome;
+document.addEventListener('keydown',function(e){
+var code=e.keyCode;
+if(detail.style.display==='block'){if(code===8||code===10009){goHome();e.preventDefault();}return;}
+if(code===37){focusTile(active-1);e.preventDefault();}
+else if(code===39){focusTile(active+1);e.preventDefault();}
+else if(code===38){focusTile(active-2);e.preventDefault();}
+else if(code===40){focusTile(active+2);e.preventDefault();}
+else if(code===13){tiles[active].click();e.preventDefault();}
+});focusTile(0);
+})();
+</script></body></html>
