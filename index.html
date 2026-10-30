@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hello TV Test</title>
+<style>
+html,body{height:100%;margin:0;background:#14243e;color:white;font-family:Arial,sans-serif}
+main{padding:9% 7%;text-align:center}h1{font-size:64px;margin:0 0 25px}p{font-size:30px;line-height:1.5}
+button{margin:25px;padding:18px 45px;font-size:30px;background:#eaf4ff;color:#162b45;border:5px solid #ffe082;border-radius:12px}
+#status{color:#b4f1ce}
+</style>
+</head>
+<body><main><h1>Hello, Samsung TV!</h1><p>This test page is running inside TizenBrew.</p><button id="test" autofocus>Press OK / Enter</button><p id="status">Waiting for remote input.</p></main>
+<script>
+(function(){
+var button=document.getElementById('test'),status=document.getElementById('status');
+button.onclick=function(){status.innerHTML='Success! Remote OK button works.';};
+document.addEventListener('keydown',function(e){if(e.keyCode===13){button.click();}});
+button.focus();
+}());
+</script>
+</body></html>

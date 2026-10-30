@@ -1,0 +1,9 @@
+{
+  "name": "hello-tv-tizenbrew-test",
+  "version": "1.0.0",
+  "description": "Simple Samsung TizenBrew compatibility test",
+  "packageType": "app",
+  "appName": "Hello TV Test",
+  "appPath": "app/index.html",
+  "keys": []
+}
