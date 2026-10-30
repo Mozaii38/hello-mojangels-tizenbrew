@@ -37,7 +37,14 @@ back.onclick=goHome;document.getElementById('chatback').onclick=goHome;
 document.getElementById('pair').onclick=function(){if(busy)return;var value=document.getElementById('endpoint').value.replace(/\/+$/,'');var code=document.getElementById('pin').value.trim();if(!/^https:\/\/[^\s/]+(?:\/[^\s]*)?$/.test(value)){status('Use a valid HTTPS gateway URL.');return;}if(!/^[0-9]{6}$/.test(code)){status('Enter the six-digit pairing code.');return;}gateway=value;busy=true;status('Pairing…');xhr('POST','/api/pair',{code:code},function(err,res){busy=false;if(err){status(err);return;}if(!res.token){status('Gateway did not return a session.');return;}session=res.token;document.getElementById('pin').value='';document.getElementById('setup').style.display='none';document.getElementById('conversation').style.display='block';status('Connected.');document.getElementById('prompt').focus();});};
 document.getElementById('send').onclick=function(){if(busy||!session)return;var inp=document.getElementById('prompt'),message=inp.value.trim();if(!message)return;busy=true;inp.value='';log('You',message);status('Thinking…');xhr('POST','/api/chat',{message:message},function(err,res){busy=false;if(err){status(err);return;}log('Mojangels',String(res.answer||'(No response)'));status('Ready.');inp.focus();});};
 document.getElementById('disconnect').onclick=function(){session='';gateway='';document.getElementById('conversation').style.display='none';document.getElementById('setup').style.display='block';document.getElementById('history').textContent='';status('Disconnected.');document.getElementById('endpoint').focus();};
-document.addEventListener('keydown',function(e){var c=e.keyCode;if(c===10009||c===8&&e.target.tagName!=='INPUT'){if(screen!=='home'){goHome();e.preventDefault();}return;}if(screen!=='home')return;if(c===37){focusTile(active-1);e.preventDefault();}else if(c===39){focusTile(active+1);e.preventDefault();}else if(c===38){focusTile(active-2);e.preventDefault();}else if(c===40){focusTile(active+2);e.preventDefault();}else if(c===13){tiles[active].click();e.preventDefault();}});
+document.addEventListener('keydown',function(e){var c=e.keyCode;if(c===10009||c===8&&e.target.tagName!=='INPUT'){if(screen!=='home'){goHome();e.preventDefault();}return;}if(screen==='chat'){
+var ids=session?['prompt','send','disconnect','chatback']:['endpoint','pin','pair','chatback'];
+var elements=ids.map(function(id){return document.getElementById(id);});
+var k=elements.indexOf(document.activeElement);
+if(c===38||c===40){elements[(k+(c===40?1:elements.length-1))%elements.length].focus();e.preventDefault();}
+return;
+}
+if(screen!=='home')return;if(c===37){focusTile(active-1);e.preventDefault();}else if(c===39){focusTile(active+1);e.preventDefault();}else if(c===38){focusTile(active-2);e.preventDefault();}else if(c===40){focusTile(active+2);e.preventDefault();}else if(c===13){tiles[active].click();e.preventDefault();}});
 focusTile(0);
 })();
 </script></body></html>
