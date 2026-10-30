@@ -4,6 +4,6 @@
   "description": "Simple Samsung TizenBrew compatibility test",
   "packageType": "app",
   "appName": "Hello TV Test",
-  "appPath": "app/index.html",
+  "appPath": "index.html",
   "keys": []
 }
