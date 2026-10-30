@@ -6,7 +6,8 @@
         viewmodes="fullscreen">
   <name>Mojangels AI TV</name>
   <content src="index.html"/>
-  <access origin="*" subdomains="true"/>
+  <!-- Restrict TV app network access to HTTPS; actual gateway host still requires pairing. -->
+  <access origin="https://*" subdomains="true"/>
   <tizen:privilege name="http://tizen.org/privilege/internet"/>
   <tizen:application id="Mojangel01.native-tizen3"
                      package="Mojangel01"
