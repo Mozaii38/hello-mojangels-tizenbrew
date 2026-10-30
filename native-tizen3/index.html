@@ -105,7 +105,13 @@ var k=elements.indexOf(document.activeElement);
 if(c===38||c===40){elements[(k+(c===40?1:elements.length-1))%elements.length].focus();e.preventDefault();}
 return;
 }
-if(screen!=='home')return;if(c===37){focusTile(active-1);e.preventDefault();}else if(c===39){focusTile(active+1);e.preventDefault();}else if(c===38){focusTile(active-2);e.preventDefault();}else if(c===40){focusTile(active+2);e.preventDefault();}else if(c===13){tiles[active].click();e.preventDefault();}});
+if(screen!=='home')return;
+var hero=document.getElementById('hero-chat'),onHero=document.activeElement===hero;
+if(c===37){if(!onHero)focusTile(active-1);e.preventDefault();}
+else if(c===39){if(!onHero)focusTile(active+1);e.preventDefault();}
+else if(c===38){hero.focus();e.preventDefault();}
+else if(c===40){focusTile(active);e.preventDefault();}
+else if(c===13){if(onHero)showChat();else tiles[active].click();e.preventDefault();}});
 focusTile(0);
 })();
 </script></body></html>
