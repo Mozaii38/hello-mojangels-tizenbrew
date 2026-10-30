@@ -4,7 +4,6 @@
 const https = require('node:https');
 const fs = require('node:fs');
 const crypto = require('node:crypto');
-const { URL } = require('node:url');
 
 const required = ['OPENAI_API_KEY','MOJANGELS_PAIR_CODE','TLS_CERT_FILE','TLS_KEY_FILE'];
 for (const key of required) if (!process.env[key]) throw new Error('Missing environment setting: '+key);
@@ -16,6 +15,7 @@ const allowedOrigin = process.env.MOJANGELS_ORIGIN || 'null';
 const sessions = new Map();
 const attempts = new Map();
 const MAX_BODY = 8192;
+const MAX_SESSIONS = 100;
 function json(res,status,body,origin) {
   if (origin === allowedOrigin) {
     res.setHeader('Access-Control-Allow-Origin',origin);
@@ -33,7 +33,7 @@ function readBody(req) {
     req.on('data',chunk=>{
       if(done)return;
       raw+=chunk.toString('utf8');
-      if(Buffer.byteLength(raw)>MAX_BODY){done=true;reject(new Error('Request too large'));req.destroy();}
+      if(Buffer.byteLength(raw)>MAX_BODY){done=true;reject(new Error('Request too large'));}
     });
     req.on('end',()=>{if(done)return;try{resolve(JSON.parse(raw));}catch(e){reject(new Error('Invalid JSON'));}});
     req.on('error',reject);
@@ -65,6 +65,8 @@ const server = https.createServer({
     const supplied=String(body.code||'');
     const expected=process.env.MOJANGELS_PAIR_CODE;
     if(supplied.length!==expected.length || !crypto.timingSafeEqual(Buffer.from(supplied),Buffer.from(expected)))return json(res,401,{error:'Invalid pairing code'},origin);
+    for (const [key, session] of sessions) if(session.expires<now)sessions.delete(key);
+    if(sessions.size>=MAX_SESSIONS)return json(res,503,{error:'Gateway session capacity reached'},origin);
     const token=crypto.randomBytes(32).toString('hex');
     sessions.set(token,{expires:now+60*60*1000,lastCall:0,history:[]});
     return json(res,200,{token:token},origin);
@@ -73,9 +75,11 @@ const server = https.createServer({
   if(!bearer.startsWith('Bearer '))return json(res,401,{error:'Pairing required'},origin);
   const token=bearer.slice(7),s=sessions.get(token);
   if(!s||s.expires<now){sessions.delete(token);return json(res,401,{error:'Session expired; pair again'},origin);}
+  if(s.busy)return json(res,429,{error:'A reply is already in progress'},origin);
   if(s.lastCall && now-s.lastCall<3000)return json(res,429,{error:'Please wait before sending another message'},origin);
   if(typeof body.message!=='string'||!body.message.trim()||body.message.length>1200)return json(res,400,{error:'Message must be 1 to 1200 characters'},origin);
   s.lastCall=now;
+  s.busy=true;
   const prior=s.history.slice(-8);
   try{
     const response=await fetch('https://api.openai.com/v1/responses',{
@@ -93,6 +97,6 @@ const server = https.createServer({
     s.history.push({role:'user',content:body.message},{role:'assistant',content:answer});
     s.history=s.history.slice(-8);
     return json(res,200,{answer:answer},origin);
-  }catch(e){return json(res,502,{error:'AI request failed or timed out'},origin);}
+  }catch(e){return json(res,502,{error:'AI request failed or timed out'},origin);}finally{s.busy=false;}
 });
 server.listen(port,host,()=>console.log('Mojangels HTTPS gateway listening on '+host+':'+port+' (pairing required)'));
