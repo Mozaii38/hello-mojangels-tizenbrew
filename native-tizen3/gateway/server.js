@@ -75,7 +75,7 @@ const server = https.createServer({
     if(sessions.size>=MAX_SESSIONS)return json(res,503,{error:'Gateway session capacity reached'},origin);
     const token=crypto.randomBytes(32).toString('hex');
     sessions.set(token,{expires:now+60*60*1000,lastCall:0,history:[]});
-    return json(res,200,{token:token},origin);
+    return json(res,200,{token:token,cursor:eventId},origin);
   }
   const bearer=String(req.headers.authorization||'');
   if(!bearer.startsWith('Bearer '))return json(res,401,{error:'Pairing required'},origin);
