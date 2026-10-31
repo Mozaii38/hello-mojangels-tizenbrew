@@ -68,7 +68,7 @@ h1{font-size:32px;letter-spacing:-1.1px;margin:0;text-shadow:none;font-weight:70
 <div class="tiles">
 <button class="tile" data-action="chat"><span class="tile-symbol">✦</span><span class="tile-copy">Mojangels AI<small>Your assistant. Connect when you choose.</small></span></button>
 <button class="tile" data-action="remote"><span class="tile-symbol">⌘</span><span class="tile-copy">Remote Studio<small>Navigate with your Samsung remote.</small></span></button>
-<button class="tile" data-action="voice"><span class="tile-symbol">◉</span><span class="tile-copy">Voice Experience<small>Coming later · hardware support not verified.</small></span></button>
+<button class="tile" data-action="voice"><span class="tile-symbol">◉</span><span class="tile-copy">Voice Companion<small>Phone push-to-talk companion available in source.</small></span></button>
 <button class="tile" data-action="tv"><span class="tile-symbol">▣</span><span class="tile-copy">Privacy Center<small>What Mojangels sends, stores and blocks.</small></span></button>
 </div><div id="message">REMOTE GUIDE  ·  ↑ ↓ ← → navigate   ·   OK select   ·   RETURN back</div></div>
 <section id="detail"><h2 id="heading"></h2><p id="description"></p><p class="tag" id="feedback"></p><button class="action" id="back">Back to dashboard</button></section>
@@ -80,12 +80,12 @@ h1{font-size:32px;letter-spacing:-1.1px;margin:0;text-shadow:none;font-weight:70
 <label for="prompt">Message</label><input class="field" id="prompt" type="text" maxlength="1200" placeholder="Ask Mojangels something">
 <button class="action" id="send">Send</button><button class="action" id="disconnect">Disconnect</button></div>
 <div id="status" role="status"></div><button class="action" id="chatback">Back to dashboard</button></section>
-<div id="footer">Mojangels Cinema UI v0.4 · No ads or analytics · AI network access only after pairing</div>
+<div id="footer">Mojangels Cinema UI v0.5 · No ads or analytics · AI network access only after pairing</div>
 </main><script>
 (function(){
 'use strict';
 var tiles=document.querySelectorAll('.tile'),home=document.getElementById('home'),detail=document.getElementById('detail'),chat=document.getElementById('chat'),heading=document.getElementById('heading'),description=document.getElementById('description'),feedback=document.getElementById('feedback'),back=document.getElementById('back'),active=0,screen='home',gateway='',session='',busy=false;
-var pages={remote:['Remote Control','Use arrows to move between tiles, OK to select and Return to go home.'],voice:['Voice Assistant','Voice input is not enabled. Microphone access has not been verified on this TV.'],tv:['Privacy Center','Mojangels has no ad SDK, tracking library, remote artwork, or automatic AI connection. Messages are sent only after you pair with your chosen AI gateway and press Send. The app stores chat only in memory, clears it on Disconnect, and does not change Samsung firmware, preinstalled apps or Samsung tracking settings. Block Samsung internet traffic separately at the router.']};
+var pages={remote:['Remote Control','Use arrows to move between tiles, OK to select and Return to go home.'],voice:['Voice Companion','A separate phone browser companion has been added to the GitHub project under voice-companion/index.html. It uses tap-to-talk speech recognition (if supported) and the same secure paired AI gateway. At present, AI replies display on the phone, NOT on this TV. The phone companion must be securely hosted and configured; voice is not active on this television. The Samsung remote microphone is not required.'],tv:['Privacy Center','Mojangels has no ad SDK, tracking library, remote artwork, or automatic AI connection. Messages are sent only after you pair with your chosen AI gateway and press Send. The app stores chat only in memory, clears it on Disconnect, and does not change Samsung firmware, preinstalled apps or Samsung tracking settings. Block Samsung internet traffic separately at the router.']};
 function focusTile(i){active=(i+tiles.length)%tiles.length;tiles[active].focus();}
 function showDetail(name){var p=pages[name];if(!p)return;heading.textContent=p[0];description.textContent=p[1];feedback.textContent=name==='remote'?'Remote OK selection works.':'Not yet enabled.';home.style.display='none';detail.style.display='block';screen='detail';back.focus();}
 function showChat(){home.style.display='none';detail.style.display='none';chat.style.display='block';screen='chat';document.getElementById(session?'prompt':'endpoint').focus();}
