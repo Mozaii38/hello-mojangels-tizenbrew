@@ -11,7 +11,7 @@ button:disabled{opacity:.45}button:focus,input:focus{outline:4px solid #ffdf8e}
 small{color:#9bbad2}
 </style></head><body><main>
 <h1>✦ Mojangels Voice</h1>
-<p><strong>Private push-to-talk companion.</strong> Your microphone activates only when you tap Talk. Your browser may use its own speech recognition service; check its privacy terms. This companion currently shows replies on your phone, not on the television.</p>
+<p><strong>Private push-to-talk companion.</strong> Your microphone activates only when you tap Talk. Your browser may use its own speech recognition service; check its privacy terms. When the TV AI Chat and this phone are both paired to the same private gateway, your question and reply can also appear on the TV. This feature requires deployment and testing.</p>
 <label for="endpoint">Trusted HTTPS AI gateway URL</label><input id="endpoint" type="url" placeholder="https://your-secure-gateway.example" autocomplete="off">
 <label for="code">Six-digit pairing code</label><input id="code" type="text" inputmode="numeric" maxlength="6" autocomplete="off">
 <button id="pair">Pair securely</button><button id="disconnect" disabled>Disconnect</button>
@@ -62,7 +62,7 @@ try{recognizer.start();listen=true;byId('talk').className='listening';byId('talk
 byId('send').onclick=function(){
 if(!token||busy)return;var msg=byId('words').value.trim();if(!msg){status('Speak or type a question first.');return;}
 busy=true;ui();status('Asking Mojangels…');
-request('/api/chat',{message:msg},function(err,r){busy=false;ui();if(err){status(err);return;}byId('answer').textContent=String(r.answer||'No answer returned.');status('Answer received.');});
+request('/api/chat',{message:msg},function(err,r){busy=false;ui();if(err){status(err);return;}byId('answer').textContent=String(r.answer||'No answer returned.');status('Answer received. A paired TV with AI Chat open can display this exchange.');});
 };
 ui();
 })();
