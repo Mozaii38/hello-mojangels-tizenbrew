@@ -16,6 +16,7 @@ const sessions = new Map();
 const attempts = new Map();
 const MAX_BODY = 8192;
 const MAX_SESSIONS = 100;
+const MAX_CLIENTS = 1000;
 function json(res,status,body,origin) {
   if (origin === allowedOrigin) {
     res.setHeader('Access-Control-Allow-Origin',origin);
@@ -59,6 +60,8 @@ const server = https.createServer({
   if(!body || typeof body!=='object'||Array.isArray(body))return json(res,400,{error:'Invalid request'},origin);
   const now=Date.now(),ip=getClientIP(req);
   if(req.url==='/api/pair'){
+    for(const [client,times] of attempts){const recent=times.filter(t=>now-t<15*60*1000);if(recent.length)attempts.set(client,recent);else attempts.delete(client);}
+    if(attempts.size>=MAX_CLIENTS&&!attempts.has(ip))return json(res,503,{error:'Pairing temporarily unavailable'},origin);
     const history=(attempts.get(ip)||[]).filter(t=>now-t<15*60*1000);
     if(history.length>=5){attempts.set(ip,history);return json(res,429,{error:'Too many pairing attempts'},origin);}
     history.push(now);attempts.set(ip,history);
@@ -73,7 +76,9 @@ const server = https.createServer({
   }
   const bearer=String(req.headers.authorization||'');
   if(!bearer.startsWith('Bearer '))return json(res,401,{error:'Pairing required'},origin);
-  const token=bearer.slice(7),s=sessions.get(token);
+  const token=bearer.slice(7);
+  if(!/^[a-f0-9]{64}$/.test(token))return json(res,401,{error:'Invalid session'},origin);
+  const s=sessions.get(token);
   if(!s||s.expires<now){sessions.delete(token);return json(res,401,{error:'Session expired; pair again'},origin);}
   if(s.busy)return json(res,429,{error:'A reply is already in progress'},origin);
   if(s.lastCall && now-s.lastCall<3000)return json(res,429,{error:'Please wait before sending another message'},origin);
