@@ -14,7 +14,7 @@ const model = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
 const allowedOrigins = (process.env.MOJANGELS_ORIGINS || process.env.MOJANGELS_ORIGIN || 'null').split(',').map(x=>x.trim()).filter(Boolean);
 const events = [];
 let eventId = 0;
-function publish(kind,text){events.push({id:++eventId,kind:kind,text:String(text).slice(0,2400)});if(events.length>30)events.shift();}
+function publish(kind,text,originToken){events.push({id:++eventId,kind:kind,text:String(text).slice(0,2400),originToken:originToken});if(events.length>30)events.shift();}
 const sessions = new Map();
 const attempts = new Map();
 const MAX_BODY = 8192;
@@ -86,7 +86,7 @@ const server = https.createServer({
   if(req.url==='/api/events'){
     const since=Number(body.since)||0;
     if(!Number.isSafeInteger(since)||since<0)return json(res,400,{error:'Invalid cursor'},origin);
-    return json(res,200,{events:events.filter(e=>e.id>since).slice(-30),cursor:eventId},origin);
+    return json(res,200,{events:events.filter(e=>e.id>since&&e.originToken!==token).slice(-30).map(e=>({id:e.id,kind:e.kind,text:e.text})),cursor:eventId},origin);
   }
   if(s.busy)return json(res,429,{error:'A reply is already in progress'},origin);
   if(s.lastCall && now-s.lastCall<3000)return json(res,429,{error:'Please wait before sending another message'},origin);
@@ -108,7 +108,7 @@ const server = https.createServer({
     const answer=(result.output||[]).flatMap(o=>(o.content||[])).filter(c=>c.type==='output_text').map(c=>c.text).join('\n').trim();
     if(!answer)return json(res,502,{error:'AI provider returned no text'},origin);
     s.history.push({role:'user',content:body.message},{role:'assistant',content:answer});
-    publish('question',body.message);publish('answer',answer);
+    publish('question',body.message,token);publish('answer',answer,token);
     s.history=s.history.slice(-8);
     return json(res,200,{answer:answer},origin);
   }catch(e){return json(res,502,{error:'AI request failed or timed out'},origin);}finally{s.busy=false;}
