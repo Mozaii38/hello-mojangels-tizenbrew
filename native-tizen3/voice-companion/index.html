@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mojangels Voice Companion</title><style>
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(150deg,#080c15,#1a3450);color:#f5f9ff;font:18px Arial,sans-serif;min-height:100vh;padding:24px}
+main{max-width:620px;margin:20px auto}h1{font-size:34px;letter-spacing:-1px}p{line-height:1.55;color:#bfd2e3}
+label{display:block;margin:20px 0 8px;font-size:15px}input{width:100%;padding:15px;font-size:18px;border:2px solid #88abd1;border-radius:12px;background:#fff;color:#111}
+button{border:0;border-radius:14px;padding:16px 20px;margin:13px 8px 8px 0;background:#eaf4ff;color:#142c45;font-size:18px;font-weight:bold}
+button:disabled{opacity:.45}button:focus,input:focus{outline:4px solid #ffdf8e}
+#talk{display:block;width:100%;background:#4e9ee0;color:#071b30;font-size:23px;margin-top:22px}
+#talk.listening{background:#ffabac}#status{margin:15px 0;min-height:40px;color:#f6d49a}#answer{white-space:pre-wrap;line-height:1.55;background:#132b42;border-radius:15px;padding:20px;min-height:80px}
+small{color:#9bbad2}
+</style></head><body><main>
+<h1>✦ Mojangels Voice</h1>
+<p><strong>Private push-to-talk companion.</strong> Your microphone activates only when you tap Talk. Your browser may use its own speech recognition service; check its privacy terms. This companion currently shows replies on your phone, not on the television.</p>
+<label for="endpoint">Trusted HTTPS AI gateway URL</label><input id="endpoint" type="url" placeholder="https://your-secure-gateway.example" autocomplete="off">
+<label for="code">Six-digit pairing code</label><input id="code" type="text" inputmode="numeric" maxlength="6" autocomplete="off">
+<button id="pair">Pair securely</button><button id="disconnect" disabled>Disconnect</button>
+<button id="talk" disabled>🎙 Tap to talk</button>
+<label for="words">Recognized words (editable before sending)</label><input id="words" type="text" maxlength="1200" placeholder="Your words appear here">
+<button id="send" disabled>Send to Mojangels AI</button>
+<div id="status" role="status">Not paired. No recording or network requests have started.</div>
+<div id="answer" aria-live="polite">AI response will appear here when a secure gateway is connected.</div>
+<small>No analytics, external scripts, or persistent chat storage. HTTPS and microphone permission are required. Supported browser speech recognition API required for Talk.</small>
+</main><script>
+(function(){
+'use strict';
+var g='',token='',busy=false,recognizer=null,listen=false;
+function byId(id){return document.getElementById(id);}
+function status(t){byId('status').textContent=t;}
+function ui(){byId('talk').disabled=!token||busy||!hasSpeech;byId('send').disabled=!token||busy;byId('disconnect').disabled=!token;byId('pair').disabled=busy||!!token;}
+var Speech=window.SpeechRecognition||window.webkitSpeechRecognition,hasSpeech=!!Speech;
+if(!hasSpeech)status('Speech recognition is unavailable in this browser. You can type a message after pairing.');
+function request(path,body,callback){
+var x=new XMLHttpRequest(),done=false;
+function finish(err,value){if(done)return;done=true;callback(err,value);}
+x.open('POST',g+path,true);x.timeout=40000;x.setRequestHeader('Content-Type','application/json');
+if(token)x.setRequestHeader('Authorization','Bearer '+token);
+x.onreadystatechange=function(){if(x.readyState!==4)return;var result={};try{result=JSON.parse(x.responseText);}catch(e){}
+if(x.status>=200&&x.status<300)finish(null,result);else finish(result.error||'Connection failed or HTTPS certificate rejected.');};
+x.onerror=function(){finish('Network or CORS error.');};
+x.ontimeout=function(){finish('Request timed out.');};
+x.send(JSON.stringify(body));
+}
+byId('pair').onclick=function(){
+if(busy||token)return;
+var url=byId('endpoint').value.replace(/\/+$/,''),code=byId('code').value.trim();
+if(!/^https:\/\/[^\s/]+$/.test(url)){status('Enter a valid HTTPS gateway origin without a path.');return;}
+if(!/^[0-9]{6}$/.test(code)){status('Enter a six-digit code.');return;}
+g=url;busy=true;ui();status('Pairing…');
+request('/api/pair',{code:code},function(err,r){busy=false;if(err){g='';status(err);}else if(!r.token){status('Missing session token.');}else{token=r.token;byId('code').value='';status('Paired. Tap Talk, or type a message.');}ui();});
+};
+byId('disconnect').onclick=function(){if(recognizer&&listen)recognizer.stop();listen=false;token='';g='';byId('code').value='';byId('words').value='';byId('answer').textContent='Session cleared.';status('Disconnected.');ui();};
+byId('talk').onclick=function(){
+if(!hasSpeech||busy||!token)return;
+if(listen){recognizer.stop();return;}
+recognizer=new Speech();recognizer.lang='en-US';recognizer.continuous=false;recognizer.interimResults=false;
+recognizer.onresult=function(e){if(e.results&&e.results[0]&&e.results[0][0]){byId('words').value=e.results[0][0].transcript.slice(0,1200);status('Speech ready. Review the text, then tap Send.');}};
+recognizer.onerror=function(e){status('Microphone or speech recognition error: '+e.error);};
+recognizer.onend=function(){listen=false;byId('talk').className='';byId('talk').textContent='🎙 Tap to talk';};
+try{recognizer.start();listen=true;byId('talk').className='listening';byId('talk').textContent='■ Stop listening';status('Listening until you stop or finish speaking…');}catch(e){status('Microphone unavailable.');}
+};
+byId('send').onclick=function(){
+if(!token||busy)return;var msg=byId('words').value.trim();if(!msg){status('Speak or type a question first.');return;}
+busy=true;ui();status('Asking Mojangels…');
+request('/api/chat',{message:msg},function(err,r){busy=false;ui();if(err){status(err);return;}byId('answer').textContent=String(r.answer||'No answer returned.');status('Answer received.');});
+};
+ui();
+})();
+</script></body></html>
